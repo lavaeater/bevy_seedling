@@ -15,7 +15,8 @@
 #![allow(clippy::type_complexity)]
 use bevy::{
     app::App,
-    ecs::{spawn::SpawnWith, system::IntoObserverSystem},
+    ecs::{observer::IntoEntityObserver, spawn::SpawnWith},
+    picking::hover::Hovered,
     prelude::*,
 };
 use bevy_seedling::prelude::*;
@@ -74,7 +75,7 @@ fn setup(mut master: Single<&mut VolumeNode, With<MainBus>>, mut commands: Comma
 }
 
 fn play_music(
-    _: On<Pointer<Click>>,
+    _: On<PointerClick>,
     playing: Query<(), (With<MusicPool>, With<SamplePlayer>)>,
     mut commands: Commands,
     server: Res<AssetServer>,
@@ -92,7 +93,7 @@ fn play_music(
     ));
 }
 
-fn play_sfx(_: On<Pointer<Click>>, mut commands: Commands, server: Res<AssetServer>) {
+fn play_sfx(_: On<PointerClick>, mut commands: Commands, server: Res<AssetServer>) {
     let source = server.load("caw.ogg");
 
     // The default pool is routed to the `SoundEffectsBus`, so we don't
@@ -121,11 +122,11 @@ fn decrement_volume(volume: Volume) -> Volume {
 }
 
 // Master
-fn lower_master(_: On<Pointer<Click>>, mut master: Single<&mut VolumeNode, With<MainBus>>) {
+fn lower_master(_: On<PointerClick>, mut master: Single<&mut VolumeNode, With<MainBus>>) {
     master.volume = decrement_volume(master.volume);
 }
 
-fn raise_master(_: On<Pointer<Click>>, mut master: Single<&mut VolumeNode, With<MainBus>>) {
+fn raise_master(_: On<PointerClick>, mut master: Single<&mut VolumeNode, With<MainBus>>) {
     master.volume = increment_volume(master.volume);
 }
 
@@ -140,14 +141,14 @@ fn update_master_volume_label(
 
 // Music
 fn lower_music(
-    _: On<Pointer<Click>>,
+    _: On<PointerClick>,
     mut music: Single<&mut VolumeNode, With<SamplerPool<MusicPool>>>,
 ) {
     music.volume = decrement_volume(music.volume);
 }
 
 fn raise_music(
-    _: On<Pointer<Click>>,
+    _: On<PointerClick>,
     mut music: Single<&mut VolumeNode, With<SamplerPool<MusicPool>>>,
 ) {
     music.volume = increment_volume(music.volume);
@@ -163,11 +164,11 @@ fn update_music_volume_label(
 }
 
 // SFX
-fn lower_sfx(_: On<Pointer<Click>>, mut sfx: Single<&mut VolumeNode, With<SoundEffectsBus>>) {
+fn lower_sfx(_: On<PointerClick>, mut sfx: Single<&mut VolumeNode, With<SoundEffectsBus>>) {
     sfx.volume = decrement_volume(sfx.volume);
 }
 
-fn raise_sfx(_: On<Pointer<Click>>, mut sfx: Single<&mut VolumeNode, With<SoundEffectsBus>>) {
+fn raise_sfx(_: On<PointerClick>, mut sfx: Single<&mut VolumeNode, With<SoundEffectsBus>>) {
     sfx.volume = increment_volume(sfx.volume);
 }
 
@@ -260,13 +261,10 @@ fn sfx_volume() -> impl Bundle {
 #[reflect(Component)]
 struct SfxVolumeLabel;
 
-pub fn btn<E, B, M, I>(t: impl Into<String>, action: I) -> impl Bundle
+pub fn btn<M, I>(t: impl Into<String>, action: I) -> impl Bundle
 where
-    E: EntityEvent,
-    B: Bundle,
-    I: IntoObserverSystem<E, B, M>,
+    I: IntoEntityObserver<M> + Sync,
 {
-    let action = IntoObserverSystem::into_system(action);
     let t: String = t.into();
 
     (
@@ -275,7 +273,8 @@ where
         Children::spawn(SpawnWith(move |parent: &mut ChildSpawner| {
             parent
                 .spawn((
-                    Button,
+                    MenuButton,
+                    Hovered::default(),
                     BorderColor::all(Color::WHITE),
                     children![Name::new("Button text"), text(Text(t))],
                 ))
@@ -283,6 +282,9 @@ where
         })),
     )
 }
+
+#[derive(Component)]
+struct MenuButton;
 
 pub fn text(text: impl Bundle) -> impl Bundle {
     (
@@ -333,24 +335,19 @@ const NORMAL_BUTTON: Color = Color::srgb(0.9, 0.9, 0.9);
 const HOVERED_BUTTON: Color = Color::srgb(0.7, 0.7, 0.7);
 
 fn button_hover(
-    interaction_query: Query<(&Interaction, &Children), (Changed<Interaction>, With<Button>)>,
+    hover_query: Query<(&Hovered, &Children), (Changed<Hovered>, With<MenuButton>)>,
     mut text: Query<&mut BackgroundColor>,
 ) {
-    for (interaction, children) in &interaction_query {
+    for (hovered, children) in &hover_query {
         let Some(mut color) = children.get(1).and_then(|c| text.get_mut(*c).ok()) else {
             continue;
         };
 
-        match *interaction {
-            Interaction::Pressed => {
-                *color = NORMAL_BUTTON.into();
-            }
-            Interaction::Hovered => {
-                *color = HOVERED_BUTTON.into();
-            }
-            Interaction::None => {
-                *color = NORMAL_BUTTON.into();
-            }
+        *color = if hovered.get() {
+            HOVERED_BUTTON
+        } else {
+            NORMAL_BUTTON
         }
+        .into();
     }
 }

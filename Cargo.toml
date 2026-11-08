@@ -2,7 +2,7 @@
 name = "bevy_seedling"
 version = "0.8.0"
 edition = "2024"
-rust-version = "1.95.0"
+rust-version = "1.97.1"
 license = "MIT OR Apache-2.0"
 authors = ["Corvus Prudens <corvusprudens@gmail.com>"]
 description = "A sprouting integration of the Firewheel audio engine"
@@ -49,33 +49,32 @@ effects = ["firewheel/all_nodes"]
 profiling = ["dep:audioadapter-buffers"]
 
 [dependencies]
-bevy_ecs = { version = "0.19.0", default-features = false }
-bevy_app = { version = "0.19.0", default-features = false }
-bevy_math = { version = "0.19.0", default-features = false, features = [
-  "curve",
+bevy_ecs = { version = "0.20.1", default-features = false }
+bevy_app = { version = "0.20.1", default-features = false }
+bevy_math = { version = "0.20.1", default-features = false, features = [
   "std",
 ] }
-bevy_asset = { version = "0.19.0", default-features = false }
-bevy_transform = { version = "0.19.0", default-features = false, features = [
+bevy_asset = { version = "0.20.1", default-features = false }
+bevy_transform = { version = "0.20.1", default-features = false, features = [
   "bevy-support",
 ] }
-bevy_log = { version = "0.19.0", default-features = false }
-bevy_platform = { version = "0.19.0", default-features = false, features = [
+bevy_log = { version = "0.20.1", default-features = false }
+bevy_platform = { version = "0.20.1", default-features = false, features = [
   "alloc",
 ] }
-bevy_time = { version = "0.19.0", default-features = false }
-bevy_reflect = { version = "0.19.0", default-features = false, features = [
+bevy_time = { version = "0.20.1", default-features = false }
+bevy_reflect = { version = "0.20.1", default-features = false, features = [
   "glam",
 ] }
-bevy_utils = { version = "0.19.0", default-features = false }
-bevy_diagnostic = { version = "0.19.0", default-features = false, optional = true }
+bevy_utils = { version = "0.20.1", default-features = false }
+bevy_diagnostic = { version = "0.20.1", default-features = false, optional = true }
 
 firewheel = { version = "0.12.0", default-features = false, features = [
   "bevy",
   "spatial_basic_node",
   "scheduled_events",
   "musical_transport",
-  "glam-32",
+  "glam-33",
   "sampler_node",
   "std",
   "tracing",
@@ -114,7 +113,7 @@ bevy_seedling = { path = ".", features = [
 firewheel = { version = "0.12.0", default-features = false, features = [
   "fast_filter_nodes",
 ] }
-bevy = { version = "0.19.0", default-features = false, features = [
+bevy = { version = "0.20.1", default-features = false, features = [
   "2d_bevy_render",
   "default_app",
   "picking",
@@ -148,3 +147,15 @@ required-features = ["profiling"]
 
 [package.metadata.docs.rs]
 all-features = true
+
+# Temporary: Firewheel 0.12 with its Bevy dependency bumped to 0.20.
+# Remove once upstream Firewheel supports Bevy 0.20.
+[patch.crates-io]
+firewheel-core = { path = "../firewheel-bevy-0.20/firewheel-core" }
+firewheel-graph = { path = "../firewheel-bevy-0.20/firewheel-graph" }
+firewheel-nodes = { path = "../firewheel-bevy-0.20/firewheel-nodes" }
+firewheel-cpal = { path = "../firewheel-bevy-0.20/firewheel-cpal" }
+firewheel-rtaudio = { path = "../firewheel-bevy-0.20/firewheel-rtaudio" }
+firewheel-symphonium = { path = "../firewheel-bevy-0.20/firewheel-symphonium" }
+firewheel-macros = { path = "../firewheel-bevy-0.20/firewheel-macros" }
+firewheel = { path = "../firewheel-bevy-0.20/firewheel" }

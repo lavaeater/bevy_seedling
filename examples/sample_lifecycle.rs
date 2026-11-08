@@ -27,9 +27,9 @@ fn startup(server: Res<AssetServer>, mut commands: Commands) {
 #[derive(Component)]
 struct OnFinished;
 
-/// When the sample above completes, [`On<Remove>`] will be triggered on all its
+/// When the sample above completes, [`On<Remove<OnFinished>>`] will be triggered on all its
 /// components when it gets despawned.
-fn on_finished(_: On<Remove, OnFinished>, server: Res<AssetServer>, mut commands: Commands) {
+fn on_finished(_: On<Remove<OnFinished>>, server: Res<AssetServer>, mut commands: Commands) {
     info!("One-shot sample finished, playing looped sample!");
 
     // A looping sample, on the other hand, will continue
